@@ -30,5 +30,5 @@ public class PuzzleSv {
     public void setImage(String image) {
         this.image = image;
     }
-    
+
 }
