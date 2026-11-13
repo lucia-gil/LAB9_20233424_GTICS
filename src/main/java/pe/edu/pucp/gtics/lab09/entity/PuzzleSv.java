@@ -15,12 +15,20 @@ public class PuzzleSv {
 
     @Column(name = "image")
     private String image;
+
+    private String getStructure() {
+        return structure;
+    }
+
+    public void setStructure(String structure) {
+        this.structure = structure;
+    }
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
     
-
-
-
-
-
-
-
 }
