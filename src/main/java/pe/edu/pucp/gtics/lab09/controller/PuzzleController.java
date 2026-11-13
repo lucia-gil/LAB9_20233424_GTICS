@@ -54,20 +54,73 @@ public class PuzzleController {
         String imagen = body.get("imagen");
         if (imagen == null || !imagen.startsWith("data:image"))) {
             respuesta.put("estado", "error");
-            respuesta.put("mensaje", "Estructura inválida para iniciar el juego.");
+            respuesta.put("mensaje", "Enviar una imgen valida");
             return ResponseEntity.badRequest().body(respuesta);
         }
 
-        int filasAfectadas = puzzleRepository.actualizarEstructura(ESTRUCTURA_INICAL);
-        if (filasAfectadas > 0) {
-            respuesta.put("estado", "ok");
-            respuesta.put("mensaje", "Juego iniciado correctamente.");
-            return ResponseEntity.ok(respuesta);
+        int filas = puzzleRepository.actualizarImagenYEstructura(imagen, ESTRUCTURA_INICAL);
+        if (filas == 0) {
+            respuesta.put("estado", "error");
+            respuesta.put("mensaje", "No hay registro del juego en la base de datos.");
+            return ResponseEntity.badRequest().body(respuesta);
+        }
+        respuesta.put("estado", "creado");
+        return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);
+    }
+
+    @PutMapping("/movimiento")
+    public ResponseEntity<HashMap<String, Object>> mover(@RequestBody HashMap<String, Integer> body) {
+        HashMap<String, Object> respuesta = new HashMap<>();
+
+        Integer posicion = body.get("posicion");
+        List<PuzzleSv> lista = puzzleRepository.findAll();
+
+        if (posicion == null || posicion < 0 || posicion > 8 || lista.isEmpty()) {
+            respuesta.put("estado", "error");
+            respuesta.put("mensaje", "No valido");
+            return ResponseEntity.badRequest().body(respuesta);
+        }
+
+        String estructura = lista.get(0).getStructure();
+        int vacio = estructura.indexOf("X");
+        int distancia = Math.abs(posicion / 3 - vacio / 3) + Math.abs(posicion % 3 - vacio % 3);
+        if (distancia != 1) {
+            respuesta.put("estado", "error");
+            respuesta.put("mensaje", "Movimiento no valido");
+            return ResponseEntity.badRequest().body(respuesta);
+        }
+
+        char[] fichas = estructura.toCharArray();
+        fichas[vacio] = fichas[posicion];
+        fichas[posicion] = 'X';
+        String nueva = new String(fichas);
+
+        respuesta.put("estado", "ok");
+        respuesta.put("estructura", nueva);
+        if (nueva.equals(ESTRUCTURA_META)) {
+            puzzleRepository.actualizarImagenYEstructura("", ESTRUCTURA_INICAL);
+            respuesta.put("terminado", true);
+        } else {
+            puzzleRepository.actualizarEstructura(nueva);
+            respuesta.put("terminado", false);
+        }
+        return ResponseEntity.ok(respuesta);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<HashMap<String, Object>> gestionarExcepcion(HttpServletRequest request) {
+        HashMap<String, Object> respuesta = new HashMap<>();
+        if (request.getMethod().equals("POST")) {
+            respuesta.put("estado", "error");
+            respuesta.put("mensaje", "Enviar una imgen valida");
+        } else if (request.getMethod().equals("PUT")) {
+            respuesta.put("estado", "error");
+            respuesta.put("mensaje", "No valido");
         } else {
             respuesta.put("estado", "error");
-            respuesta.put("mensaje", "No se pudo iniciar el juego.");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(respuesta);
+            respuesta.put("mensaje", "Solicitud no valida");
         }
+        return ResponseEntity.badRequest().body(respuesta);
     }
 
 
