@@ -1,0 +1,33 @@
+.preview {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+}
+
+.tablero {
+    --tam: 330px;
+    width: var(--tam);
+    height: var(--tam);
+    display: grid;
+    gap: 2px;
+    padding: 2px;
+    background-color: #000;
+}
+
+.casilla {
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
+.casilla.vacia {
+    cursor: default;
+}
+
+.casilla.movible:hover {
+    outline: 3px solid #198754;
+    outline-offset: -3px;
+}
+
+.tablero.terminado .casilla {
+    cursor: default;
+}
